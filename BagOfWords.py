@@ -1,3 +1,8 @@
+#notes: 
+
+#- for running on windows, I installed full Anaconda and it contains all the prereqs. Besides that, also have to do python nltk.download() and get the stopwords corpus. After that saw it working on windows with python BagOfWord.py
+
+#- used material from:
 #!/usr/bin/env python
 
 #  Author: Angela Chapman
@@ -17,6 +22,7 @@ import pandas as pd
 import numpy as np
 from bs4 import BeautifulSoup
 import re
+import nltk
 from nltk.corpus import stopwords
 
 
