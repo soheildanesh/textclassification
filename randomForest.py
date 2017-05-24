@@ -24,6 +24,7 @@ from bs4 import BeautifulSoup
 import re
 import nltk
 from nltk.corpus import stopwords
+from sklearn.model_selection import cross_val_score
 
 
 def review_to_words( raw_review ):
@@ -112,36 +113,43 @@ if __name__ == '__main__':
     # Initialize a Random Forest classifier with 100 trees
     forest = RandomForestClassifier(n_estimators = 100)
 
-    # Fit the forest to the training set, using the bag of words as
-    # features and the sentiment labels as the response variable
-    #
-    # This may take a few minutes to run
-    forest = forest.fit( train_data_features, train["sentiment"] )
+
+    #BOOKMARK: working on corss validation
+    crossValResults = cross_val_score(forest, train_data_features, train["sentiment"], scoring='accuracy', cv=5)
+    print("crossValResults = "+str(crossValResults))
+
+    if False:
+
+        # Fit the forest to the training set, using the bag of words as
+        # features and the sentiment labels as the response variable
+        #
+        # This may take a few minutes to run
+        forest = forest.fit( train_data_features, train["sentiment"] )
 
 
 
-    # Create an empty list and append the clean reviews one by one
-    clean_test_reviews = []
+        # Create an empty list and append the clean reviews one by one
+        clean_test_reviews = []
 
-    #print "Cleaning and parsing the test set movie reviews...\n"
-    for i in range(0,len(test["review"])):
-        #clean_test_reviews.append(" ".join(KaggleWord2VecUtility.review_to_wordlist(test["review"][i], True)))
-        clean_test_reviews.append(review_to_words(test["review"][i])) #done by soheil, grabbed review_to_words from here : https://www.kaggle.com/c/word2vec-nlp-tutorial#part-1-for-beginners-bag-of-words
+        #print "Cleaning and parsing the test set movie reviews...\n"
+        for i in range(0,len(test["review"])):
+            #clean_test_reviews.append(" ".join(KaggleWord2VecUtility.review_to_wordlist(test["review"][i], True)))
+            clean_test_reviews.append(review_to_words(test["review"][i])) #done by soheil, grabbed review_to_words from here : https://www.kaggle.com/c/word2vec-nlp-tutorial#part-1-for-beginners-bag-of-words
 
-    # Get a bag of words for the test set, and convert to a numpy array
-    test_data_features = vectorizer.transform(clean_test_reviews)
-    np.asarray(test_data_features)
+        # Get a bag of words for the test set, and convert to a numpy array
+        test_data_features = vectorizer.transform(clean_test_reviews)
+        np.asarray(test_data_features)
 
-    # Use the random forest to make sentiment label predictions
-    #print "Predicting test labels...\n"
-    result = forest.predict(test_data_features)
+        # Use the random forest to make sentiment label predictions
+        #print "Predicting test labels...\n"
+        result = forest.predict(test_data_features)
 
-    # Copy the results to a pandas dataframe with an "id" column and
-    # a "sentiment" column
-    output = pd.DataFrame( data={"id":test["id"], "sentiment":result} )
+        # Copy the results to a pandas dataframe with an "id" column and
+        # a "sentiment" column
+        output = pd.DataFrame( data={"id":test["id"], "sentiment":result} )
 
-    # Use pandas to write the comma-separated output file
-    output.to_csv(os.path.join(os.path.dirname(__file__), 'data', 'Bag_of_Words_model_randomForest.csv'), index=False, quoting=3)
-    #print "Wrote results to Bag_of_Words_model.csv"
+        # Use pandas to write the comma-separated output file
+        output.to_csv(os.path.join(os.path.dirname(__file__), 'data', 'Bag_of_Words_model_randomForest.csv'), index=False, quoting=3)
+        #print "Wrote results to Bag_of_Words_model.csv"
 
 

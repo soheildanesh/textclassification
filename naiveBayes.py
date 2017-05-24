@@ -27,7 +27,11 @@ import re
 import nltk
 from nltk.corpus import stopwords
 
+from nltk.corpus import stopwords
+from sklearn.model_selection import cross_val_score
+
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.linear_model import SGDClassifier
 from sklearn.feature_extraction.text import TfidfTransformer
 
 
@@ -116,40 +120,42 @@ if __name__ == '__main__':
     #forest = RandomForestClassifier(n_estimators = 100)  todo delete later
     
     # Initialize a Random Forest classifier with 100 trees
-    clf = MultinomialNB().fit(train_data_features_tfidf, train["sentiment"])
+    #clf = MultinomialNB().fit(train_data_features_tfidf, train["sentiment"])
+    clf = SGDClassifier(loss='hinge', penalty='l2', alpha=1e-3, n_iter=5, random_state=42) #best performance - might have to use multiway classification if number of classes more than 2. In that case see: http://scikit-learn.org/stable/modules/multiclass.html#multiclass-learning- though from docs it seems like it defaults to 1vsall : http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier.html#sklearn.linear_model.SGDClassifier
+    #for exploring non-linear kernels with svms and SGDClassifier see: http://scikit-learn.org/stable/modules/kernel_approximation.html
 
-    
-    #todo delete
-    #forest = forest.fit( train_data_features, train["sentiment"] )
+    crossValResults = cross_val_score(clf, train_data_features, train["sentiment"], scoring='accuracy', cv=5)
+    print("crossValResults = "+str(crossValResults))
 
 
+    if False:
 
-    # Create an empty list and append the clean reviews one by one
-    clean_test_reviews = []
+        # Create an empty list and append the clean reviews one by one
+        clean_test_reviews = []
 
-    #print "Cleaning and parsing the test set movie reviews...\n"
-    for i in range(0,len(test["review"])):
-        #clean_test_reviews.append(" ".join(KaggleWord2VecUtility.review_to_wordlist(test["review"][i], True)))
-        clean_test_reviews.append(review_to_words(test["review"][i])) #done by soheil, grabbed review_to_words from here : https://www.kaggle.com/c/word2vec-nlp-tutorial#part-1-for-beginners-bag-of-words
+        #print "Cleaning and parsing the test set movie reviews...\n"
+        for i in range(0,len(test["review"])):
+            #clean_test_reviews.append(" ".join(KaggleWord2VecUtility.review_to_wordlist(test["review"][i], True)))
+            clean_test_reviews.append(review_to_words(test["review"][i])) #done by soheil, grabbed review_to_words from here : https://www.kaggle.com/c/word2vec-nlp-tutorial#part-1-for-beginners-bag-of-words
 
-    # Get a bag of words for the test set, and convert to a numpy array
-    test_data_features = vectorizer.transform(clean_test_reviews)
-    test_data_features_tfidf = tfidf_transformer.transform(test_data_features)
+        # Get a bag of words for the test set, and convert to a numpy array
+        test_data_features = vectorizer.transform(clean_test_reviews)
+        test_data_features_tfidf = tfidf_transformer.transform(test_data_features)
 
-    np.asarray(test_data_features_tfidf)
+        np.asarray(test_data_features_tfidf)
 
-    # Use the random forest to make sentiment label predictions
-    #print "Predicting test labels...\n"
-    #result = forest.predict(test_data_features) #TODO delete
+        # Use the random forest to make sentiment label predictions
+        #print "Predicting test labels...\n"
+        #result = forest.predict(test_data_features) #TODO delete
 
-    result = clf.predict(test_data_features_tfidf)
+        result = clf.predict(test_data_features_tfidf)
 
-    # Copy the results to a pandas dataframe with an "id" column and
-    # a "sentiment" column
-    output = pd.DataFrame( data={"id":test["id"], "sentiment":result} )  #TODO delete
+        # Copy the results to a pandas dataframe with an "id" column and
+        # a "sentiment" column
+        output = pd.DataFrame( data={"id":test["id"], "sentiment":result} )  #TODO delete
 
-    # Use pandas to write the comma-separated output file
-    output.to_csv(os.path.join(os.path.dirname(__file__), 'data', 'Bag_of_Words_model_naiveBayes.csv'), index=False, quoting=3)
-    #print "Wrote results to Bag_of_Words_model.csv"
+        # Use pandas to write the comma-separated output file
+        output.to_csv(os.path.join(os.path.dirname(__file__), 'data', 'Bag_of_Words_model_naiveBayes.csv'), index=False, quoting=3)
+        #print "Wrote results to Bag_of_Words_model.csv"
 
 
